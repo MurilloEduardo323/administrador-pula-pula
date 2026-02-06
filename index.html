@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel Admin - Murillo Brinquedos</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #2c3e50; padding: 20px; }
+        .container { background: white; padding: 20px; border-radius: 10px; max-width: 1100px; margin: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #34495e; color: white; }
+        .pago { background: #2ecc71; color: white; padding: 5px; border-radius: 5px; border:none; cursor:pointer;}
+        .pendente { background: #f1c40f; padding: 5px; border-radius: 5px; border:none; cursor:pointer;}
+        .btn-agenda { background: #4285f4; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; text-decoration:none; font-size: 12px;}
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div id="login-area" style="text-align:center">
+        <h2>Acesso Admin</h2>
+        <input type="password" id="senha" placeholder="Senha">
+        <button onclick="logar()">Entrar</button>
+    </div>
+
+    <div id="painel" class="hidden">
+        <h2>Gerenciar Locações</h2>
+      <table>
+    <thead>
+        <tr>
+            <th>Feito em:</th> <th>Dia da Festa</th>
+            <th>Cliente / Tel</th>
+            <th>Brinquedo</th>
+            <th>Endereço</th>
+            <th>Pagamento</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody id="lista"></tbody>
+</table>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyDeN9rHuLrMFMjyifSVykcQc9Ixd5mSMWg",
+        authDomain: "brinquedos-murillo.firebaseapp.com",
+        databaseURL: "https://brinquedos-murillo-default-rtdb.firebaseio.com",
+        projectId: "brinquedos-murillo",
+        storageBucket: "brinquedos-murillo.firebasestorage.app",
+        messagingSenderId: "98837784075",
+        appId: "1:98837784075:web:922a0dac507d280bd0c90e"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    function logar() {
+        if(document.getElementById('senha').value === "123") {
+            document.getElementById('login-area').classList.add('hidden');
+            document.getElementById('painel').classList.remove('hidden');
+            carregar();
+        } else { alert("Senha errada!"); }
+    }
+
+    function carregar() {
+       database.ref('reservas').on('value', snap => {
+        const lista = document.getElementById('lista');
+        lista.innerHTML = "";
+        snap.forEach(item => {
+            const res = item.val();
+            const id = item.key;
+            
+            // Se a dataPedido não existir (pedidos antigos), ele mostra "Antigo"
+            const dataDoPedido = res.dataPedido ? res.dataPedido : "Pedido Antigo";
+
+            lista.innerHTML += `
+                <tr>
+                    <td style="font-size: 11px; color: #7f8c8d;">${dataDoPedido}</td> 
+                    <td><b>${formatarData(res.data)}</b></td>
+                    <td>${res.cliente}<br><small>${res.telefone}</small></td>
+                    <td>${res.brinquedo}</td>
+                    <td><small>${res.endereco || '---'}</small></td>
+                    <td>
+                        <button class="${res.pago ? 'pago' : 'pendente'}" onclick="mudarStatus('${id}', ${res.pago})">
+                            ${res.pago ? 'PAGO' : 'PENDENTE'}
+                        </button>
+                    </td>
+                    <td>
+                        <button onclick="excluir('${id}')" style="background:red; color:white; border:none; border-radius:4px; padding:5px 10px; cursor:pointer">X</button>
+                    </td>
+                </tr>`;
+        });
+    });
+    }
+
+    // Função auxiliar para deixar a data da festa bonita (Brasil)
+    function formatarData(data) {
+        if(!data) return "---";
+        const partes = data.split("-");
+        return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+
+    function mudarStatus(id, atual) { database.ref('reservas/'+id).update({ pago: !atual }); }
+    function excluir(id) { if(confirm("Excluir?")) database.ref('reservas/'+id).remove(); }
+</script>
+</body>
+</html>
