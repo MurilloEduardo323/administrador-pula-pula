@@ -2,48 +2,111 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Painel Admin - Murillo Brinquedos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Murillo Brinquedos</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        body { font-family: sans-serif; background: #2c3e50; padding: 20px; }
-        .container { background: white; padding: 20px; border-radius: 10px; max-width: 1100px; margin: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background: #34495e; color: white; }
-        .pago { background: #2ecc71; color: white; padding: 5px; border-radius: 5px; border:none; cursor:pointer;}
-        .pendente { background: #f1c40f; padding: 5px; border-radius: 5px; border:none; cursor:pointer;}
-        .btn-agenda { background: #4285f4; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; text-decoration:none; font-size: 12px;}
+        :root {
+            --primary: #2c3e50;
+            --success: #2ecc71;
+            --warning: #f1c40f;
+            --danger: #e74c3c;
+        }
+
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        h2 { text-align: center; color: var(--primary); margin-bottom: 20px; }
+
+        /* Estilização da Tabela */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { background: var(--primary); color: white; padding: 12px; text-align: left; }
+        td { border-bottom: 1px solid #ddd; padding: 12px; font-size: 14px; }
+
+        /* Botões */
+        .btn { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .pago { background: var(--success); color: white; }
+        .pendente { background: var(--warning); color: #333; }
+        .btn-excluir { background: var(--danger); color: white; }
+        .btn-agenda { background: #4285f4; color: white; text-decoration: none; display: inline-block; font-size: 12px; margin-bottom: 5px; }
+
+        /* Login */
+        #login-area { text-align: center; padding: 40px 10px; }
+        input[type="password"] { padding: 12px; border-radius: 8px; border: 1px solid #ccc; width: 100%; max-width: 250px; margin-bottom: 10px; }
         .hidden { display: none; }
+
+        /* RESPONSIVIDADE (O PULO DO GATO) */
+        @media screen and (max-width: 768px) {
+            .container { padding: 10px; }
+            
+            /* Esconde o cabeçalho original da tabela */
+            thead { display: none; }
+
+            /* Faz cada linha virar um bloco (card) */
+            tr { 
+                display: block; 
+                margin-bottom: 15px; 
+                border: 2px solid #eee; 
+                border-radius: 10px; 
+                padding: 10px;
+                background: #fff;
+            }
+
+            td { 
+                display: flex; 
+                justify-content: space-between; 
+                align-items: center; 
+                text-align: right; 
+                border-bottom: 1px solid #f1f1f1;
+                padding: 8px 0;
+            }
+
+            /* Adiciona o título de cada dado antes do valor */
+            td::before {
+                content: attr(data-label);
+                font-weight: bold;
+                text-align: left;
+                color: var(--primary);
+                font-size: 12px;
+                text-transform: uppercase;
+            }
+
+            td:last-child { border-bottom: none; }
+        }
     </style>
 </head>
 <body>
+
 <div class="container">
-    <div id="login-area" style="text-align:center">
-        <h2>Acesso Admin</h2>
-        <input type="password" id="senha" placeholder="Senha">
-        <button onclick="logar()">Entrar</button>
+    <div id="login-area">
+        <h2>Painel Murillo 🔒</h2>
+        <input type="password" id="senha" placeholder="Senha do Admin"> <br>
+        <button class="btn pago" onclick="logar()" style="width: 100%; max-width: 250px;">Entrar</button>
     </div>
 
     <div id="painel" class="hidden">
-        <h2>Gerenciar Locações</h2>
-      <table>
-    <thead>
-        <tr>
-            <th>Feito em:</th> <th>Dia da Festa</th>
-            <th>Cliente / Tel</th>
-            <th>Brinquedo</th>
-            <th>Endereço</th>
-            <th>Pagamento</th>
-            <th>Ações</th>
-        </tr>
-    </thead>
-    <tbody id="lista"></tbody>
-</table>
+        <h2>Minha Agenda</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Feito em</th>
+                    <th>Festa</th>
+                    <th>Cliente</th>
+                    <th>Brinquedo</th>
+                    <th>Endereço</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="lista">
+                </tbody>
+        </table>
     </div>
 </div>
 
 <script>
+    // Suas chaves do Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyDeN9rHuLrMFMjyifSVykcQc9Ixd5mSMWg",
         authDomain: "brinquedos-murillo.firebaseapp.com",
@@ -61,49 +124,46 @@
             document.getElementById('login-area').classList.add('hidden');
             document.getElementById('painel').classList.remove('hidden');
             carregar();
-        } else { alert("Senha errada!"); }
+        } else { alert("Senha incorreta!"); }
     }
 
     function carregar() {
-       database.ref('reservas').on('value', snap => {
-        const lista = document.getElementById('lista');
-        lista.innerHTML = "";
-        snap.forEach(item => {
-            const res = item.val();
-            const id = item.key;
-            
-            // Se a dataPedido não existir (pedidos antigos), ele mostra "Antigo"
-            const dataDoPedido = res.dataPedido ? res.dataPedido : "Pedido Antigo";
+        database.ref('reservas').on('value', snap => {
+            const lista = document.getElementById('lista');
+            lista.innerHTML = "";
+            snap.forEach(item => {
+                const res = item.val();
+                const id = item.key;
+                
+                const dataPedido = res.dataPedido || "---";
+                const dataFesta = res.data ? res.data.split('-').reverse().join('/') : "---";
+                const dataAgenda = res.data ? res.data.replace(/-/g, '') : "";
+                
+                const linkGoogle = `https://www.google.com/calendar/render?action=TEMPLATE&text=LOCAÇÃO:+${res.brinquedo}&dates=${dataAgenda}/${dataAgenda}&details=Cliente:+${res.cliente}+-+Tel:+${res.telefone}`;
 
-            lista.innerHTML += `
-                <tr>
-                    <td style="font-size: 11px; color: #7f8c8d;">${dataDoPedido}</td> 
-                    <td><b>${formatarData(res.data)}</b></td>
-                    <td>${res.cliente}<br><small>${res.telefone}</small></td>
-                    <td>${res.brinquedo}</td>
-                    <td><small>${res.endereco || '---'}</small></td>
-                    <td>
-                        <button class="${res.pago ? 'pago' : 'pendente'}" onclick="mudarStatus('${id}', ${res.pago})">
-                            ${res.pago ? 'PAGO' : 'PENDENTE'}
-                        </button>
-                    </td>
-                    <td>
-                        <button onclick="excluir('${id}')" style="background:red; color:white; border:none; border-radius:4px; padding:5px 10px; cursor:pointer">X</button>
-                    </td>
-                </tr>`;
+                lista.innerHTML += `
+                    <tr>
+                        <td data-label="Feito em">${dataPedido}</td>
+                        <td data-label="Dia Festa"><b>${dataFesta}</b></td>
+                        <td data-label="Cliente">${res.cliente}<br><small>${res.telefone}</small></td>
+                        <td data-label="Brinquedo">${res.brinquedo}</td>
+                        <td data-label="Endereço"><small>${res.endereco || '---'}</small></td>
+                        <td data-label="Status">
+                            <button class="btn ${res.pago ? 'pago' : 'pendente'}" onclick="mudarStatus('${id}', ${res.pago})">
+                                ${res.pago ? 'PAGO' : 'PENDENTE'}
+                            </button>
+                        </td>
+                        <td data-label="Ações">
+                            <a href="${linkGoogle}" target="_blank" class="btn btn-agenda">📅 Agenda</a>
+                            <button class="btn btn-excluir" onclick="excluir('${id}')">X</button>
+                        </td>
+                    </tr>`;
+            });
         });
-    });
-    }
-
-    // Função auxiliar para deixar a data da festa bonita (Brasil)
-    function formatarData(data) {
-        if(!data) return "---";
-        const partes = data.split("-");
-        return `${partes[2]}/${partes[1]}/${partes[0]}`;
     }
 
     function mudarStatus(id, atual) { database.ref('reservas/'+id).update({ pago: !atual }); }
-    function excluir(id) { if(confirm("Excluir?")) database.ref('reservas/'+id).remove(); }
+    function excluir(id) { if(confirm("Deseja apagar essa reserva?")) database.ref('reservas/'+id).remove(); }
 </script>
 </body>
 </html>
