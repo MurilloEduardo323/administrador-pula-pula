@@ -3,79 +3,68 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Murillo Brinquedos</title>
+    <title>Painel Admin - Murillo Brinquedos</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        :root { --primary: #2c3e50; --success: #2ecc71; --warning: #f1c40f; --danger: #e74c3c; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 10px; }
-        .container { max-width: 1100px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: var(--primary); margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { background: var(--primary); color: white; padding: 12px; text-align: left; }
-        td { border-bottom: 1px solid #ddd; padding: 12px; font-size: 14px; }
-        .btn { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .pago { background: var(--success); color: white; }
-        .pendente { background: var(--warning); color: #333; }
-        .btn-excluir { background: var(--danger); color: white; }
-        .btn-agenda { background: #4285f4; color: white; text-decoration: none; display: inline-block; font-size: 12px; margin-bottom: 5px; }
-        #login-area { text-align: center; padding: 40px 10px; }
-        input[type="password"], input[type="month"] { padding: 10px; border-radius: 8px; border: 1px solid #ccc; }
-        .hidden { display: none; }
+        body { font-family: 'Segoe UI', sans-serif; background: #2c3e50; padding: 20px; }
+        .container { background: white; padding: 20px; border-radius: 10px; max-width: 1200px; margin: auto; }
+        
+        .filtros { margin-bottom: 20px; background: #f1f2f6; padding: 15px; border-radius: 8px; }
+        .filtros select { padding: 8px; border-radius: 5px; border: 1px solid #ccc; font-size: 16px; }
 
-        @media screen and (max-width: 768px) {
-            thead { display: none; }
-            tr { display: block; margin-bottom: 15px; border: 2px solid #eee; border-radius: 10px; padding: 10px; background: #fff; }
-            td { display: flex; justify-content: space-between; align-items: center; text-align: right; border-bottom: 1px solid #f1f1f1; padding: 8px 0; }
-            td::before { content: attr(data-label); font-weight: bold; text-align: left; color: var(--primary); font-size: 12px; text-transform: uppercase; }
-            td:last-child { border-bottom: none; }
-        }
+        .stats { display: flex; gap: 20px; margin-bottom: 25px; }
+        .stat-card { background: #f8f9fa; padding: 20px; border-radius: 10px; flex: 1; text-align: center; border-bottom: 4px solid #e67e22; }
+        .stat-card h3 { margin: 0; color: #7f8c8d; font-size: 12px; text-transform: uppercase; }
+        .stat-card p { margin: 10px 0 0; font-size: 20px; font-weight: bold; color: #2c3e50; }
+
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #eee; padding: 12px; text-align: left; }
+        th { background: #34495e; color: white; }
+        .valor-celula { font-weight: bold; color: #27ae60; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div id="login-area">
-        <h2>Painel Murillo 🔒</h2>
-        <input type="password" id="senha" placeholder="Senha do Admin"> <br><br>
-        <button class="btn pago" onclick="logar()" style="width: 100%; max-width: 250px;">Entrar</button>
+    <div id="login-area" style="text-align:center; padding: 40px;">
+        <h2>🔐 Acesso Admin</h2>
+        <input type="password" id="senha" placeholder="Senha">
+        <button onclick="logar()">Entrar</button>
     </div>
 
     <div id="painel" class="hidden">
-        <h2>Minha Agenda</h2>
+        <h2>💰 Resumo Financeiro</h2>
         
-        <div style="background: #e1e8ed; padding: 15px; border-radius: 10px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center; justify-content: space-between;">
-            <div style="display: flex; gap: 10px; align-items: flex-end;">
-                <div>
-                    <label style="font-weight:bold; display:block; font-size: 11px; margin-bottom: 5px;">FILTRAR POR MÊS:</label>
-                    <input type="month" id="filtro-mes" onchange="resetVerTudo()">
-                </div>
-                <button onclick="mostrarTudo()" style="padding: 10px 15px; background: var(--primary); color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">Mostrar Tudo</button>
-            </div>
+        <div class="filtros">
+            <label><b>Filtrar por mês: </b></label>
+            <select id="filtro-mes" onchange="renderizarTabela()">
+                <option value="todos">Todos os meses</option>
+                <option value="01">Janeiro</option>
+                <option value="02">Fevereiro</option>
+                <option value="03">Março</option>
+                <option value="04">Abril</option>
+                <option value="05">Maio</option>
+                <option value="06">Junho</option>
+                <option value="07">Julho</option>
+                <option value="08">Agosto</option>
+                <option value="09">Setembro</option>
+                <option value="10">Outubro</option>
+                <option value="11">Novembro</option>
+                <option value="12">Dezembro</option>
+            </select>
+        </div>
 
-            <div style="display: flex; gap: 20px; text-align: right;">
-                <div>
-                    <div style="font-size: 11px; color: #555;">Total de Locações:</div>
-                    <div id="total-locacoes" style="font-size: 18px; font-weight: bold; color: var(--primary);">0</div>
-                </div>
-                <div>
-                    <div style="font-size: 11px; color: #555;">Faturamento:</div>
-                    <div id="faturamento-total" style="font-size: 18px; font-weight: bold; color: #27ae60;">R$ 0,00</div>
-                </div>
-            </div>
+        <div class="stats">
+            <div class="stat-card"><h3>Total Filtrado</h3><p id="total-geral">R$ 0,00</p></div>
+            <div class="stat-card"><h3>Recebido</h3><p id="total-pago" style="color: #27ae60;">R$ 0,00</p></div>
+            <div class="stat-card"><h3>Pendente</h3><p id="total-pendente" style="color: #e67e22;">R$ 0,00</p></div>
         </div>
 
         <table>
             <thead>
-                <tr>
-                    <th>Feito em</th>
-                    <th>Festa</th>
-                    <th>Cliente</th>
-                    <th>Brinquedo</th>
-                    <th>Endereço</th>
-                    <th>Status</th>
-                    <th>Ações</th>
-                </tr>
+                <tr><th>Data Festa</th><th>Cliente</th><th>Brinquedo</th><th>Valor</th><th>Status</th></tr>
             </thead>
             <tbody id="lista"></tbody>
         </table>
@@ -95,91 +84,70 @@
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    let verTudoGlobal = false;
+    let todasReservas = []; // Variável global para guardar os dados
 
     function logar() {
         if(document.getElementById('senha').value === "123") {
             document.getElementById('login-area').classList.add('hidden');
             document.getElementById('painel').classList.remove('hidden');
-            carregar();
-        } else { alert("Senha incorreta!"); }
+            carregarDados();
+        } else { alert("Senha errada!"); }
     }
 
-    function resetVerTudo() {
-        verTudoGlobal = false;
-        carregar();
-    }
-
-    function mostrarTudo() {
-        verTudoGlobal = true;
-        document.getElementById('filtro-mes').value = ""; 
-        carregar();
-    }
-
-    function carregar() {
-        const filtroInput = document.getElementById('filtro-mes');
-        
-        // Se não houver filtro e não for "verTudo", coloca o mês atual como padrão
-        if (!filtroInput.value && !verTudoGlobal) {
-            const hoje = new Date();
-            filtroInput.value = hoje.toISOString().substring(0, 7);
-        }
-
-        const mesFiltrado = filtroInput.value;
-
+    function carregarDados() {
         database.ref('reservas').on('value', snap => {
-            const lista = document.getElementById('lista');
-            lista.innerHTML = "";
-            let totalDinheiro = 0;
-            let totalQtd = 0;
-
+            todasReservas = [];
             snap.forEach(item => {
-                const res = item.val();
-                const id = item.key;
-                
-                // Lógica: se verTudoGlobal for true, atende. Se não, checa o mês.
-                const atendeFiltro = verTudoGlobal || (res.data && res.data.startsWith(mesFiltrado));
-
-                if (atendeFiltro) {
-                    totalQtd++;
-                    
-                    // Soma faturamento
-                    if(res.brinquedo === "Pula-Pula") totalDinheiro += 100;
-                    else if(res.brinquedo === "Piscina-Bolinha") totalDinheiro += 90;
-                    else if(res.brinquedo === "Combo-Duplo") totalDinheiro += 180;
-
-                    const dataPedido = res.dataPedido || "---";
-                    const dataFesta = res.data ? res.data.split('-').reverse().join('/') : "---";
-                    const dataAgenda = res.data ? res.data.replace(/-/g, '') : "";
-                    const linkGoogle = `https://www.google.com/calendar/render?action=TEMPLATE&text=LOCAÇÃO:+${res.brinquedo}&dates=${dataAgenda}/${dataAgenda}&details=Cliente:+${res.cliente}+-+Tel:+${res.telefone}`;
-
-                    lista.innerHTML += `
-                        <tr>
-                            <td data-label="Feito em">${dataPedido}</td>
-                            <td data-label="Dia Festa"><b>${dataFesta}</b></td>
-                            <td data-label="Cliente">${res.cliente}<br><small>${res.telefone}</small></td>
-                            <td data-label="Brinquedo">${res.brinquedo}</td>
-                            <td data-label="Endereço"><small>${res.endereco || '---'}</small></td>
-                            <td data-label="Status">
-                                <button class="btn ${res.pago ? 'pago' : 'pendente'}" onclick="mudarStatus('${id}', ${res.pago})">
-                                    ${res.pago ? 'PAGO' : 'PENDENTE'}
-                                </button>
-                            </td>
-                            <td data-label="Ações">
-                                <a href="${linkGoogle}" target="_blank" class="btn btn-agenda">📅 Agenda</a>
-                                <button class="btn btn-excluir" onclick="excluir('${id}')">X</button>
-                            </td>
-                        </tr>`;
-                }
+                todasReservas.push({ id: item.key, ...item.val() });
             });
-            
-            document.getElementById('faturamento-total').innerText = `R$ ${totalDinheiro.toFixed(2)}`;
-            document.getElementById('total-locacoes').innerText = totalQtd;
+            renderizarTabela();
         });
     }
 
+    function renderizarTabela() {
+        const mesSelecionado = document.getElementById('filtro-mes').value;
+        const lista = document.getElementById('lista');
+        lista.innerHTML = "";
+        
+        let somaGeral = 0, somaPago = 0, somaPendente = 0;
+
+        todasReservas.forEach(res => {
+            // Extrai o mês da data (Formato YYYY-MM-DD -> O mês é a segunda parte)
+            const mesData = res.data ? res.data.split('-')[1] : null;
+
+            // Lógica do filtro: se for "todos" ou se o mês bater, exibe
+            if(mesSelecionado === "todos" || mesData === mesSelecionado) {
+                const valor = parseFloat(res.valorTotal) || 0;
+                somaGeral += valor;
+                if(res.pago) somaPago += valor; else somaPendente += valor;
+
+                lista.innerHTML += `
+                    <tr>
+                        <td><b>${formatarData(res.data)}</b></td>
+                        <td>${res.cliente}</td>
+                        <td>${res.brinquedo}</td>
+                        <td class="valor-celula">R$ ${valor.toFixed(2)}</td>
+                        <td>
+                            <button class="${res.pago ? 'pago' : 'pendente'}" onclick="mudarStatus('${res.id}', ${res.pago})">
+                                ${res.pago ? 'PAGO' : 'PENDENTE'}
+                            </button>
+                        </td>
+                    </tr>`;
+            }
+        });
+
+        document.getElementById('total-geral').innerText = `R$ ${somaGeral.toFixed(2)}`;
+        document.getElementById('total-pago').innerText = `R$ ${somaPago.toFixed(2)}`;
+        document.getElementById('total-pendente').innerText = `R$ ${somaPendente.toFixed(2)}`;
+    }
+
+    function formatarData(data) {
+        if(!data) return "---";
+        const partes = data.split("-");
+        return `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+
     function mudarStatus(id, atual) { database.ref('reservas/'+id).update({ pago: !atual }); }
-    function excluir(id) { if(confirm("Deseja apagar essa reserva?")) database.ref('reservas/'+id).remove(); }
 </script>
 </body>
 </html>
