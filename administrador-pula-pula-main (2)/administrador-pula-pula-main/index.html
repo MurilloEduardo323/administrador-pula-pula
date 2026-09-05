@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Admin - Murillo Brinquedos</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #2c3e50; padding: 15px; margin: 0; }
+        .container { background: white; padding: 20px; border-radius: 15px; max-width: 1200px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+
+        .filtros { margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 10px; border: 1px solid #ddd; }
+        select { padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 16px; width: 100%; max-width: 300px; }
+
+        .stats { display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; }
+        .stat-card { background: #fff; padding: 15px; border-radius: 10px; flex: 1; min-width: 200px; text-align: center; border: 1px solid #eee; border-bottom: 4px solid #e67e22; }
+        .stat-card h3 { margin: 0; color: #7f8c8d; font-size: 12px; text-transform: uppercase; }
+        .stat-card p { margin: 8px 0 0; font-size: 20px; font-weight: bold; color: #2c3e50; }
+        .stat-card.lucro { border-bottom-color: #27ae60; }
+
+        .tabela-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+        th, td { border: 1px solid #eee; padding: 12px; text-align: left; }
+        th { background: #34495e; color: white; }
+
+        .pago { background: #2ecc71; color: white; padding: 6px 10px; border-radius: 5px; border:none; cursor:pointer; font-weight: bold; }
+        .pendente { background: #f1c40f; color: #333; padding: 6px 10px; border-radius: 5px; border:none; cursor:pointer; font-weight: bold; }
+        .btn-whats-adm { background: #25D366; color: white; text-decoration: none; padding: 3px 8px; border-radius: 4px; font-size: 12px; display: inline-block; margin-top: 5px; }
+        .hidden { display: none; }
+
+        .btn-icone { background: none; border: none; cursor: pointer; font-size: 18px; margin: 0 3px; }
+        .input-edicao { width: 90px; padding: 6px; border-radius: 5px; border: 1px solid #ccc; font-size: 14px; }
+        .btn-salvar { background: #27ae60; color: white; border: none; padding: 6px 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-cancelar { background: #95a5a6; color: white; border: none; padding: 6px 10px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 4px; }
+
+        .grafico-box { background: #f8f9fa; border: 1px solid #ddd; border-radius: 10px; padding: 20px; margin-bottom: 25px; }
+        .grafico-box h3 { margin-top: 0; color: #2c3e50; }
+        .grafico-filtro { display: flex; gap: 15px; align-items: center; margin-bottom: 15px; flex-wrap: wrap; }
+        .grafico-filtro label { font-weight: bold; }
+        canvas { max-height: 350px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="login-area" style="text-align:center; padding: 50px 0;">
+        <h2>🔐 Admin Murillo Brinquedos</h2>
+        <input type="password" id="senha" placeholder="Senha Admin" style="padding: 12px; width: 200px; border-radius: 8px; border: 1px solid #ccc;">
+        <button onclick="logar()" style="padding: 12px 25px; background: #e67e22; color: white; border: none; border-radius: 8px; cursor: pointer;">Entrar</button>
+    </div>
+
+    <div id="painel" class="hidden">
+
+        <div class="grafico-box">
+            <h3>📊 Lucro por Mês</h3>
+            <div class="grafico-filtro">
+                <label>Mostrar:</label>
+                <select id="filtro-grafico" onchange="renderizarGrafico()">
+                    <option value="ambos">Lucro e Total de Frete</option>
+                    <option value="lucro">Somente Lucro</option>
+                    <option value="frete">Somente Total de Frete</option>
+                </select>
+            </div>
+            <canvas id="graficoLucro"></canvas>
+        </div>
+
+        <div class="filtros">
+            <label><b>Filtrar por mês da festa:</b></label><br><br>
+            <select id="filtro-mes" onchange="renderizarTabela()">
+                <option value="todos">Todos os meses</option>
+                <option value="01">Janeiro</option> <option value="02">Fevereiro</option>
+                <option value="03">Março</option> <option value="04">Abril</option>
+                <option value="05">Maio</option> <option value="06">Junho</option>
+                <option value="07">Julho</option> <option value="08">Agosto</option>
+                <option value="09">Setembro</option> <option value="10">Outubro</option>
+                <option value="11">Novembro</option> <option value="12">Dezembro</option>
+            </select>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card"><h3>Total no Mês</h3><p id="total-geral">R$ 0,00</p></div>
+            <div class="stat-card"><h3>Recebido</h3><p id="total-pago" style="color: #27ae60;">R$ 0,00</p></div>
+            <div class="stat-card"><h3>A Receber</h3><p id="total-pendente" style="color: #e67e22;">R$ 0,00</p></div>
+            <div class="stat-card lucro"><h3>Lucro (Total - Frete)</h3><p id="total-lucro" style="color: #27ae60;">R$ 0,00</p></div>
+        </div>
+
+        <div class="tabela-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data Festa</th>
+                        <th>Cliente / Contato</th>
+                        <th>Brinquedo</th>
+                        <th>Valor</th>
+                        <th>Frete</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="lista"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyDeN9rHuLrMFMjyifSVykcQc9Ixd5mSMWg",
+        authDomain: "brinquedos-murillo.firebaseapp.com",
+        databaseURL: "https://brinquedos-murillo-default-rtdb.firebaseio.com",
+        projectId: "brinquedos-murillo",
+        storageBucket: "brinquedos-murillo.firebasestorage.app",
+        messagingSenderId: "98837784075",
+        appId: "1:98837784075:web:922a0dac507d280bd0c90e"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    let todasReservas = [];
+    let editandoId = null;
+    let chartLucro = null;
+
+    function logar() {
+        if(document.getElementById('senha').value === "123") {
+            document.getElementById('login-area').classList.add('hidden');
+            document.getElementById('painel').classList.remove('hidden');
+            carregarDados();
+        } else { alert("Senha incorreta!"); }
+    }
+
+    function carregarDados() {
+        database.ref('reservas').on('value', snap => {
+            todasReservas = [];
+            snap.forEach(item => {
+                todasReservas.push({ id: item.key, ...item.val() });
+            });
+            renderizarTabela();
+            renderizarGrafico();
+        });
+    }
+
+    function renderizarTabela() {
+        const mesSel = document.getElementById('filtro-mes').value;
+        const lista = document.getElementById('lista');
+        lista.innerHTML = "";
+        let somaGeral = 0, somaPago = 0, somaPendente = 0, somaFrete = 0;
+
+        todasReservas.sort((a,b) => new Date(a.data) - new Date(b.data));
+
+        todasReservas.forEach(res => {
+            const mesData = res.data ? res.data.split('-')[1] : null;
+
+            if(mesSel === "todos" || mesData === mesSel) {
+                const valor = parseFloat(res.valorTotal) || 0;
+                const frete = parseFloat(res.frete) || 0;
+                somaGeral += valor;
+                somaFrete += frete;
+                if(res.pago) somaPago += valor; else somaPendente += valor;
+
+                const telLimpo = res.telefone ? res.telefone.replace(/\D/g, '') : "";
+
+                if(editandoId === res.id) {
+                    lista.innerHTML += `
+                        <tr>
+                            <td><b>${formatarData(res.data)}</b></td>
+                            <td>
+                                <b>${res.cliente}</b><br>
+                                <a href="https://wa.me/55${telLimpo}" target="_blank" class="btn-whats-adm">📱 ${res.telefone}</a>
+                            </td>
+                            <td><small>${res.brinquedo}</small></td>
+                            <td><input type="number" step="0.01" class="input-edicao" id="edit-valor-${res.id}" value="${valor.toFixed(2)}"></td>
+                            <td><input type="number" step="0.01" class="input-edicao" id="edit-frete-${res.id}" value="${frete.toFixed(2)}"></td>
+                            <td colspan="2">
+                                <button class="btn-salvar" onclick="salvarEdicao('${res.id}')">💾 Salvar</button>
+                                <button class="btn-cancelar" onclick="cancelarEdicao()">Cancelar</button>
+                            </td>
+                        </tr>`;
+                } else {
+                    lista.innerHTML += `
+                        <tr>
+                            <td><b>${formatarData(res.data)}</b></td>
+                            <td>
+                                <b>${res.cliente}</b><br>
+                                <a href="https://wa.me/55${telLimpo}" target="_blank" class="btn-whats-adm">📱 ${res.telefone}</a>
+                            </td>
+                            <td><small>${res.brinquedo}</small></td>
+                            <td style="font-weight:bold; color:#27ae60">R$ ${valor.toFixed(2)}</td>
+                            <td>R$ ${frete.toFixed(2)}</td>
+                            <td>
+                                <button class="${res.pago ? 'pago' : 'pendente'}" onclick="mudarStatus('${res.id}', ${res.pago})">
+                                    ${res.pago ? 'PAGO' : 'PENDENTE'}
+                                </button>
+                            </td>
+                            <td>
+                                <button class="btn-icone" onclick="editarValor('${res.id}')" title="Editar valores">✏️</button>
+                                <button class="btn-icone" onclick="excluir('${res.id}')" title="Excluir">🗑️</button>
+                            </td>
+                        </tr>`;
+                }
+            }
+        });
+
+        document.getElementById('total-geral').innerText = `R$ ${somaGeral.toFixed(2)}`;
+        document.getElementById('total-pago').innerText = `R$ ${somaPago.toFixed(2)}`;
+        document.getElementById('total-pendente').innerText = `R$ ${somaPendente.toFixed(2)}`;
+        document.getElementById('total-lucro').innerText = `R$ ${(somaGeral - somaFrete).toFixed(2)}`;
+    }
+
+    function editarValor(id) {
+        editandoId = id;
+        renderizarTabela();
+    }
+
+    function cancelarEdicao() {
+        editandoId = null;
+        renderizarTabela();
+    }
+
+    function salvarEdicao(id) {
+        const inputValor = document.getElementById('edit-valor-' + id);
+        const inputFrete = document.getElementById('edit-frete-' + id);
+        const novoValor = parseFloat(inputValor.value.replace(',', '.')) || 0;
+        const novoFrete = parseFloat(inputFrete.value.replace(',', '.')) || 0;
+
+        database.ref('reservas/' + id).update({ valorTotal: novoValor, frete: novoFrete }).then(() => {
+            editandoId = null;
+        });
+    }
+
+    function formatarData(data) {
+        if(!data) return "---";
+        const p = data.split("-");
+        return `${p[2]}/${p[1]}/${p[0]}`;
+    }
+
+    function mudarStatus(id, atual) { database.ref('reservas/'+id).update({ pago: !atual }); }
+    function excluir(id) { if(confirm("Excluir reserva?")) database.ref('reservas/'+id).remove(); }
+
+    // ---------- GRÁFICO DE LUCRO POR MÊS ----------
+
+    const NOMES_MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+    function agregarPorMes() {
+        const mapa = {};
+        todasReservas.forEach(res => {
+            if(!res.data) return;
+            const partes = res.data.split('-');
+            if(partes.length < 2) return;
+            const chave = `${partes[0]}-${partes[1]}`;
+            if(!mapa[chave]) mapa[chave] = { total: 0, frete: 0 };
+            mapa[chave].total += parseFloat(res.valorTotal) || 0;
+            mapa[chave].frete += parseFloat(res.frete) || 0;
+        });
+
+        const chaves = Object.keys(mapa).sort();
+        const labels = chaves.map(chave => {
+            const [ano, mes] = chave.split('-');
+            return `${NOMES_MESES[parseInt(mes, 10) - 1]}/${ano.slice(2)}`;
+        });
+        const lucro = chaves.map(chave => mapa[chave].total - mapa[chave].frete);
+        const freteTotal = chaves.map(chave => mapa[chave].frete);
+
+        return { labels, lucro, freteTotal };
+    }
+
+    function renderizarGrafico() {
+        const { labels, lucro, freteTotal } = agregarPorMes();
+        const filtro = document.getElementById('filtro-grafico').value;
+
+        const datasets = [];
+        if(filtro === 'ambos' || filtro === 'lucro') {
+            datasets.push({
+                label: 'Lucro (R$)',
+                data: lucro,
+                backgroundColor: '#27ae60'
+            });
+        }
+        if(filtro === 'ambos' || filtro === 'frete') {
+            datasets.push({
+                label: 'Total de Frete (R$)',
+                data: freteTotal,
+                backgroundColor: '#e67e22'
+            });
+        }
+
+        const ctx = document.getElementById('graficoLucro').getContext('2d');
+        if(chartLucro) chartLucro.destroy();
+        chartLucro = new Chart(ctx, {
+            type: 'bar',
+            data: { labels, datasets },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'top' } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { callback: v => `R$ ${v}` }
+                    }
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>
