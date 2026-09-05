@@ -1,0 +1,32 @@
+body { font-family: 'Segoe UI', sans-serif; background: #2c3e50; padding: 15px; margin: 0; }
+.container { background: white; padding: 20px; border-radius: 15px; max-width: 1200px; margin: auto; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+
+.filtros { margin-bottom: 20px; background: #f8f9fa; padding: 15px; border-radius: 10px; border: 1px solid #ddd; }
+select { padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 16px; width: 100%; max-width: 300px; }
+
+.stats { display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; }
+.stat-card { background: #fff; padding: 15px; border-radius: 10px; flex: 1; min-width: 200px; text-align: center; border: 1px solid #eee; border-bottom: 4px solid #e67e22; }
+.stat-card h3 { margin: 0; color: #7f8c8d; font-size: 12px; text-transform: uppercase; }
+.stat-card p { margin: 8px 0 0; font-size: 20px; font-weight: bold; color: #2c3e50; }
+.stat-card.lucro { border-bottom-color: #27ae60; }
+
+.tabela-wrapper { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 1000px; }
+th, td { border: 1px solid #eee; padding: 12px; text-align: left; }
+th { background: #34495e; color: white; }
+
+.pago { background: #2ecc71; color: white; padding: 6px 10px; border-radius: 5px; border:none; cursor:pointer; font-weight: bold; }
+.pendente { background: #f1c40f; color: #333; padding: 6px 10px; border-radius: 5px; border:none; cursor:pointer; font-weight: bold; }
+.btn-whats-adm { background: #25D366; color: white; text-decoration: none; padding: 3px 8px; border-radius: 4px; font-size: 12px; display: inline-block; margin-top: 5px; }
+.hidden { display: none; }
+
+.btn-icone { background: none; border: none; cursor: pointer; font-size: 18px; margin: 0 3px; }
+.input-edicao { width: 90px; padding: 6px; border-radius: 5px; border: 1px solid #ccc; font-size: 14px; }
+.btn-salvar { background: #27ae60; color: white; border: none; padding: 6px 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+.btn-cancelar { background: #95a5a6; color: white; border: none; padding: 6px 10px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 4px; }
+
+.grafico-box { background: #f8f9fa; border: 1px solid #ddd; border-radius: 10px; padding: 20px; margin-bottom: 25px; }
+.grafico-box h3 { margin-top: 0; color: #2c3e50; }
+.grafico-filtro { display: flex; gap: 15px; align-items: center; margin-bottom: 15px; flex-wrap: wrap; }
+.grafico-filtro label { font-weight: bold; }
+canvas { max-height: 350px; }

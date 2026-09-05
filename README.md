@@ -1,4 +1,3 @@
-[README.md](https://github.com/user-attachments/files/31870116/README.md)
 # 🔐 Painel Admin — Murillo Brinquedos
 
 Painel administrativo para gerenciar as reservas feitas no [Sistema de Reservas Pula-Pula](../Projeto-pula-pula-main), com controle de pagamentos, edição manual de valores e gráfico de lucro mensal.
@@ -27,7 +26,9 @@ Painel administrativo para gerenciar as reservas feitas no [Sistema de Reservas 
 
 ```
 administrador-pula-pula-main/
-└── index.html   # painel completo (HTML + CSS + JS)
+├── index.html   # estrutura HTML do painel
+├── style.css    # estilos do painel
+└── script.js    # lógica (Firebase, tabela, edição, gráfico)
 ```
 
 ## Como usar
@@ -52,9 +53,9 @@ Esses dois valores vêm de cada registro salvo no nó `reservas` do Firebase (ve
 
 ## Personalização
 
-- **Senha de acesso**: altere a string `"123"` dentro da função `logar()`.
-- **Meses/filtros**: as opções do filtro de mês estão no `<select id="filtro-mes">`.
-- **Cores e estilo**: todo o CSS está no `<style>` no topo do arquivo.
+- **Senha de acesso**: altere a string `"123"` dentro da função `logar()` (em `script.js`).
+- **Meses/filtros**: as opções do filtro de mês estão no `<select id="filtro-mes">` (em `index.html`).
+- **Cores e estilo**: todo o CSS está em `style.css`.
 
 ## Projeto relacionado
 
